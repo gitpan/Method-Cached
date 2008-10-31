@@ -1,0 +1,26 @@
+Changes
+inc/Module/Install.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Can.pm
+inc/Module/Install/Fetch.pm
+inc/Module/Install/Include.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/Metadata.pm
+inc/Module/Install/Win32.pm
+inc/Module/Install/WriteAll.pm
+inc/Test/More.pm
+lib/Method/Cached.pm
+lib/Method/Cached/KeyRule.pm
+Makefile.PL
+MANIFEST			This list of files
+META.yml
+README
+t/00-load.t
+t/01-basic.t
+t/02-management.t
+t/03-composite.t
+t/97-boilerplate.t
+t/98-perlcritic.t
+t/99-pod.t
+t/benchmark.pl
+t/perlcriticrc
