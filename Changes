@@ -1,5 +1,9 @@
 Revision history for Perl extension Method::Cached
 
+0.030   Wed, 26 Nov 2008 16:08:06 +0900
+        - added method of deleting cache
+        - parameter of hash is supported
+
 0.020   Fri, 31 Oct 2008 15:59:35 +0900
         - first release
 

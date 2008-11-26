@@ -10,7 +10,6 @@ use Method::Cached
         storage_args  => [
             { servers    => [qw/ 127.0.0.1:11211 /] },
         ],
-        key_rule      => 'SERIALIZE', # SERIALIZE / LIST
     },
     -domains => {
         'memcached-fast' => {
@@ -18,15 +17,15 @@ use Method::Cached
             storage_args  => [
                 { servers    => [qw/ 127.0.0.1:11211 /] },
             ],
-            key_rule      => 'SERIALIZE', # SERIALIZE / LIST
+            key_rule      => 'LIST', # SERIALIZE / LIST
         },
         'fastmmap'       => {
             storage_class => 'Cache::FastMmap',
             storage_args  => [
                 share_file     => '/tmp/fastmmap.bin',
-                unlink_on_exit => 0,
+                unlink_on_exit => 1,
             ],
-            key_rule      => 'SERIALIZE', # SERIALIZE / LIST
+            key_rule      => 'LIST', # SERIALIZE / LIST
         },
     },
 ;
@@ -42,19 +41,19 @@ use Method::Cached
         fib($n - 1) + fib($n - 2);
     }
 
-    sub fib_default :Cached(5) {
+    sub fib_default :Cached {
         my $n = shift;
         return $n if $n < 2;
         fib_default($n - 1) + fib_default($n - 2);
     }
 
-    sub fib_memcached :Cached('memcached-fast', 5) {
+    sub fib_memcached :Cached('memcached-fast') {
         my $n = shift;
         return $n if $n < 2;
         fib_memcached($n - 1) + fib_memcached($n - 2);
     }
 
-    sub fib_fastmmap :Cached('cache-fastmmap', 5) {
+    sub fib_fastmmap :Cached('cache-fastmmap') {
         my $n = shift;
         return $n if $n < 2;
         fib_fastmmap($n - 1) + fib_fastmmap($n - 2);

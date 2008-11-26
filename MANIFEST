@@ -19,8 +19,7 @@ t/00-load.t
 t/01-basic.t
 t/02-management.t
 t/03-composite.t
-t/97-boilerplate.t
-t/98-perlcritic.t
-t/99-pod.t
+t/04-delete.t
+t/05-hashargs.t
 t/benchmark.pl
 t/perlcriticrc

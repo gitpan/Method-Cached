@@ -6,6 +6,7 @@ use Test::More tests => 12;
 AT_STARTUP_SCRIPT :
 {
     BEGIN {
+        use strict;
         use Method::Cached;
 
         Method::Cached->default_domain({
@@ -20,7 +21,6 @@ IN_MODULE_OF_SOMETHING :
 {
     package Dummy;
 
-    use strict;
     use Method::Cached;
 
     sub new { bless {}, shift }
