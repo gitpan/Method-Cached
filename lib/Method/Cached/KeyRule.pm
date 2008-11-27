@@ -2,9 +2,6 @@ package Method::Cached::KeyRule;
 
 use strict;
 use warnings;
-use Digest::SHA;
-use JSON::XS;
-use Storable;
 use Scalar::Util;
 
 {
@@ -26,16 +23,6 @@ use Scalar::Util;
 sub SELF_SHIFT {
     my ($method_name, $args) = @_;
     shift @{$args};
-    return;
-}
-
-sub SELF_CODED {
-    my ($method_name, $args) = @_;
-    our $ENCODER ||= JSON::XS->new->convert_blessed(1);
-    *UNIVERSAL::TO_JSON = sub { Storable::nfreeze \@_ };
-    my $json = $ENCODER->encode($args->[0]);
-    undef *UNIVERSAL::TO_JSON;
-    $args->[0] = Digest::SHA::sha1_base64($json);
     return;
 }
 
@@ -61,16 +48,21 @@ sub HASH {
     $method_name . $ser;
 }
 
-sub SERIALIZE {
-    my ($method_name, $args) = @_;
-    local $^W = 0;
-    our $ENCODER ||= JSON::XS->new->convert_blessed(1);
-    *UNIVERSAL::TO_JSON = sub { Storable::nfreeze \@_ };
-    my $json = $ENCODER->encode($args);
-    undef *UNIVERSAL::TO_JSON;
-    $method_name . Digest::SHA::sha1_base64($json);
-}
-
 1;
 
 __END__
+
+=head1 NAME
+
+Method::Cached::KeyRule - Generation rule of key built in
+
+=head1 AUTHOR
+
+Satoshi Ohkubo E<lt>s.ohkubo@gmail.comE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

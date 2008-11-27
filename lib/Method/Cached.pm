@@ -7,14 +7,14 @@ use Carp qw/croak confess/;
 use UNIVERSAL::require;
 use Method::Cached::KeyRule;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 my %_DOMAINS;
 my %_METHOD_INFO;
 my $_DEFAULT_DOMAIN = {
     storage_class => 'Cache::FastMmap',
     storage_args  => [],
-    key_rule      => 'LIST',
+    # key_rule    => 'LIST', # default 'LIST' at KeyRule.pm
 };
 
 sub UNIVERSAL::Cached :ATTR(CODE) {
@@ -242,13 +242,24 @@ When the domain name is omitted, the domain of default is used.
 
 =item B<LIST>
 
-=item B<SERIALIZE>
+=item B<HASH>
 
 =item B<SELF_SHIFT>
 
-=item B<SELF_CODED>
-
 =item B<PER_OBJECT>
+
+=back
+
+=head2 OPTIONAL, RULE TO GENERATE KEY
+
+  use Method::Cached;
+  use Method::Cached::KeyRule::Serialize;
+
+=over 4
+
+=item B<SERIALIZE>
+
+=item B<SELF_CODED>
 
 =back
 

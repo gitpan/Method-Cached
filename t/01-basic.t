@@ -7,6 +7,7 @@ use Test::More tests => 40;
     package Dummy;
 
     use Method::Cached;
+    use Method::Cached::KeyRule::Serialize;
 
     # Every time, this method invents another value
     sub echo(@) { join ':', @_, time, rand }

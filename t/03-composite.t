@@ -12,7 +12,6 @@ AT_STARTUP_SCRIPT :
         Method::Cached->default_domain({
             storage_class => 'Cache::FastMmap',
             storage_args  => [],
-            key_rule      => 'SERIALIZE',
         });
     }
 }
@@ -22,6 +21,7 @@ IN_MODULE_OF_SOMETHING :
     package Dummy;
 
     use Method::Cached;
+    use Method::Cached::KeyRule::Serialize qw/SELF_CODED/;
 
     sub new { bless {}, shift }
     sub id  { 1 < @_ ? $_[0]->{id} = $_[1] : $_[0]->{id} }

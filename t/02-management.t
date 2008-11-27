@@ -10,7 +10,6 @@ use Test::More tests => 7;
         {
             storage_class => 'Cache::FastMmap',
             storage_args  => [],
-            key_rule      => 'LIST',
         }
     );
 }
@@ -22,7 +21,7 @@ use Test::More tests => 7;
             share_file     => '/tmp/apps1_cache.bin',
             unlink_on_exit => 1,
         ],
-        key_rule      => 'SERIALIZE',
+        key_rule      => 'HASH',
     };
     my $apps_2 = {
         storage_class => 'Cache::FastMmap',
@@ -30,7 +29,7 @@ use Test::More tests => 7;
             share_file     => '/tmp/apps2_cache.bin',
             unlink_on_exit => 1,
         ],
-        key_rule      => [qw/PER_OBJECT SERIALIZE/],
+        key_rule      => [qw/PER_OBJECT HASH/],
     };
     Method::Cached->import(-domains => {
         apps_1 => $apps_1,
@@ -59,5 +58,3 @@ use Test::More tests => 7;
     eval { Method::Cached->import(-default => { storage_class => 'Dummy' . time }) };
     like $@, qr/^Can't load module:/;
 }
-
-

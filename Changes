@@ -1,5 +1,8 @@
 Revision history for Perl extension Method::Cached
 
+0.040   Thu, 27 Nov 2008 14:24:44 +0900
+        - change concerning generation rule of key
+
 0.030   Wed, 26 Nov 2008 16:08:06 +0900
         - added method of deleting cache
         - parameter of hash is supported
