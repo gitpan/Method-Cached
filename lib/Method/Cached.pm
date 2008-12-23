@@ -3,60 +3,75 @@ package Method::Cached;
 use strict;
 use warnings;
 use Attribute::Handlers;
+use B qw/svref_2object/;
 use Carp qw/croak confess/;
 use UNIVERSAL::require;
 use Method::Cached::KeyRule;
 
-our $VERSION = '0.04';
+our $VERSION = '0.045_1';
 
 my %_DOMAINS;
+my $_DEFAULT_DOMAIN = { storage_class => 'Cache::FastMmap' };
 my %_METHOD_INFO;
-my $_DEFAULT_DOMAIN = {
-    storage_class => 'Cache::FastMmap',
-    storage_args  => [],
-    # key_rule    => 'LIST', # default 'LIST' at KeyRule.pm
-};
-
-sub UNIVERSAL::Cached :ATTR(CODE) {
-    my ($pkg, $symbol, $code, $options) = @_[0 .. 2, 4];
-    $options = [ $options || () ] unless ref $options eq 'ARRAY';
-    my $name = $pkg . '::' . *{$symbol}{NAME};
-    my ($dname, $expires, $key_rule) = _parse_option(@{ $options });
-    my $info = _note_method_info($name, $code, $dname, $expires, $key_rule);
-    no strict 'refs';
-    no warnings 'redefine';
-    *{$name} = sub { unshift @_, ($info, wantarray); goto &_wrapper };
-}
+my %_PREPARE_INFO;
 
 sub import {
     my ($class, %args) = @_;
-    if (exists $args{-domains} && defined $args{-domains}) {
-        my $domains = $args{-domains};
-        ref $domains eq 'HASH'
-            || confess '-domains option should be a hash reference';
-        $class->set_domain(%{ $domains });
-    }
-    if (exists $args{-default} && defined $args{-default}) {
-        my $default = $args{-default};
-        ref $default eq 'HASH'
-            || confess '-default option should be a hash reference';
-        $class->default_domain($default);
+    if ($class eq __PACKAGE__) {
+        if (exists $args{-domains} && defined $args{-domains}) {
+            my $domains = $args{-domains};
+            ref $domains eq 'HASH'
+                || confess '-domains option should be a hash reference';
+            $class->set_domain(%{ $domains });
+        }
+        if (exists $args{-default} && defined $args{-default}) {
+            my $default = $args{-default};
+            ref $default eq 'HASH'
+                || confess '-default option should be a hash reference';
+            $class->default_domain($default);
+        }
+        else {
+            _inspect_storage_class($_DEFAULT_DOMAIN->{storage_class});
+        }
+        unless (exists $args{-inherit} && $args{-inherit} eq 'no') {
+            my $caller = caller 0;
+            if ($caller ne 'main' && ! $caller->isa(__PACKAGE__)) {
+                no strict 'refs';
+                unshift @{$caller . '::ISA'}, __PACKAGE__;
+            }
+        }
     }
     else {
-        _inspect_storage_class($_DEFAULT_DOMAIN->{storage_class});
+        $class->_apply_cached;
+    }
+}
+
+sub UNIVERSAL::Cached :ATTR(CODE,BEGIN,INIT) {
+    my ($package, $symbol, $code, $attr, $args, $phase, $file, $line) = @_;
+    $args = [ $args || () ] if ref $args ne 'ARRAY';
+    my $name;
+    if ($phase eq 'BEGIN') {
+        my $name = $package->_scan_symbol_name($file, $line) || return;
+        _prepare_info($package, $name, $code);
+        _method_info($package, $name, $code, _parse_attr_args(@{$args}));
+    }
+    if ($phase eq 'INIT') {
+        my $name = $package . '::' . *{$symbol}{NAME};
+        _method_info($package, $name, $code, _parse_attr_args(@{$args}));
+        _defined_code($name) || _replace_cached($name);
     }
 }
 
 sub delete {
-    my ($class, $namespace) = splice @_, 0, 2;
-    unless (exists $_METHOD_INFO{$namespace}) {
-        if ($namespace =~ /^(.*)::([^:]*)$/) {
+    my ($class, $name) = splice @_, 0, 2;
+    unless (exists $_METHOD_INFO{$name}) {
+        if ($name =~ /^(.*)::([^:]*)$/) {
             my ($package, $method) = ($1, $2);
             $package->require || confess "Can't load module: $package";
         }
     }
-    if (exists $_METHOD_INFO{$namespace}) {
-        my $info    = $_METHOD_INFO{$namespace};
+    if (exists $_METHOD_INFO{$name}) {
+        my $info    = $_METHOD_INFO{$name};
         my $dname   = $info->{domain};
         my $domain  = $_DOMAINS{$dname} ? $_DOMAINS{$dname} : $_DEFAULT_DOMAIN;
         my $rule    = $info->{key_rule} || $domain->{key_rule};
@@ -98,7 +113,35 @@ sub get_domain {
     return $_DOMAINS{$dname};
 }
 
-sub _parse_option {
+sub _scan_symbol_name {
+    my ($package, $file, $line) = @_;
+    no strict 'refs';
+    for (values %{$package . '::'}) {
+        (my $symbol = $_) =~ s/^\*//;
+        my $gv = svref_2object(\*{$symbol});
+        next if ref $gv ne 'B::GV';
+        return $symbol if $line == $gv->LINE && $file eq $gv->FILE;
+    }
+    return;
+}
+
+sub _apply_cached {
+    my $class = shift;
+    my $prof  = exists $_PREPARE_INFO{$class} ? $_PREPARE_INFO{$class} : ();
+    return unless $prof;
+    for my $name (keys %{$prof}) {
+        _replace_cached($name);
+    }
+}
+
+sub _replace_cached {
+    my $name = shift;
+    no strict 'refs';
+    no warnings;
+    *{$name} = sub { unshift @_, $_METHOD_INFO{$name}, wantarray; goto &_wrapper };
+}
+
+sub _parse_attr_args {
     my $dname    = q{};
     my $expires  = 0;
     my $key_rule = undef;
@@ -116,14 +159,28 @@ sub _parse_option {
     return ($dname, $expires, $key_rule);
 }
 
-sub _note_method_info {
-    my ($name, $code, $dname, $expires, $key_rule) = @_;
+sub _prepare_info {
+    my ($package, $name, $code) = @_;
+    my $profile = $_PREPARE_INFO{$package} ||= {};
+    $profile->{$name} = $code;
+}
+
+sub _defined_code {
+    my $name = shift;
+    my $info = $_METHOD_INFO{$name} || return;
+    my $prof = $_PREPARE_INFO{$info->{package}} || return;
+    $prof->{$name} eq $info->{code};
+}
+
+sub _method_info {
+    my ($package, $name, $code, $dname, $expires, $key_rule) = @_;
     $_METHOD_INFO{$name} = {
-        name     => $name,
-        code     => $code,
-        domain   => $dname,
-        expires  => $expires,
-        key_rule => $key_rule,
+        'package'  => $package,
+        'name'     => $name,
+        'code'     => $code,
+        'domain'   => $dname,
+        'expires'  => $expires,
+        'key_rule' => $key_rule,
     };
 }
 

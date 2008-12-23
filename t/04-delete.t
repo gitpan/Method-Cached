@@ -17,6 +17,9 @@ use Test::More 'no_plan';
 {
     use Method::Cached;
 
+    # use Dummy::DeleteTest;
+    Dummy::DeleteTest->import;
+
     my $param1 = rand;
     my $param2 = rand;
     

@@ -26,13 +26,22 @@ IN_MODULE_OF_SOMETHING :
     sub new { bless {}, shift }
     sub id  { 1 < @_ ? $_[0]->{id} = $_[1] : $_[0]->{id} }
 
-    sub self_shift : Cached(0, [SELF_SHIFT, LIST]) { time . ':' . rand }
-    sub self_coded : Cached(0, [SELF_CODED, LIST]) { time . ':' . rand }
-    sub per_object : Cached(0, [PER_OBJECT, LIST]) { time . ':' . rand }
+    sub self_shift : Cached(0, [SELF_SHIFT, LIST]) {
+        time . ':' . rand
+    }
+    sub self_coded : Cached(0, [SELF_CODED, LIST]) {
+        time . ':' . rand
+    }
+    sub per_object : Cached(0, [PER_OBJECT, LIST]) {
+        time . ':' . rand
+    }
 }
 
 IN_MAIN :
 {
+    # use Dummy;
+    Dummy->import;
+
     sub make_value {
         my $method = shift;
         my $obj1 = Dummy->new;

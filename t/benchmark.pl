@@ -27,8 +27,7 @@ use Method::Cached
             ],
             key_rule      => 'LIST', # SERIALIZE / LIST
         },
-    },
-;
+    }, ;
 
 {
     package Dummy;
@@ -58,10 +57,12 @@ use Method::Cached
         return $n if $n < 2;
         fib_fastmmap($n - 1) + fib_fastmmap($n - 2);
     }
-
 }
 
 package main;
+
+# use Dummy;
+Dummy->import;
 
 use Benchmark qw/cmpthese timethese/;
 
@@ -74,7 +75,7 @@ sub def_fib { $def_fib = $num; $def_fib = Dummy::fib_default($def_fib)  }
 sub mc_fib  { $mc_fib  = $num; $mc_fib  = Dummy::fib_memcached($mc_fib) }
 sub fm_fib  { $fm_fib  = $num; $fm_fib  = Dummy::fib_fastmmap($fm_fib)  }
 
-cmpthese(10000, {
+cmpthese(50000, {
     'fib'               => \&fib,
     'C(default)'        => \&def_fib,
     'C(Memcached-Fast)' => \&mc_fib,

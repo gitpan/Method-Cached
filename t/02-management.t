@@ -9,7 +9,6 @@ use Test::More tests => 7;
         Method::Cached->default_domain,
         {
             storage_class => 'Cache::FastMmap',
-            storage_args  => [],
         }
     );
 }

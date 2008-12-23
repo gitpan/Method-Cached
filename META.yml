@@ -19,10 +19,11 @@ requires:
   Attribute::Handlers: 0.79
   Cache::FastMmap: 1.28
   Digest::SHA: 5.47
+  Filter::Util::Call: 0
   JSON::XS: 2.2222
   MIME::Base64: 3.07
   Storable: 2.18
   UNIVERSAL::require: 0.11
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.04
+version: 0.045_1

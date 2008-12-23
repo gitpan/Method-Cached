@@ -18,6 +18,9 @@ use Test::More 'no_plan';
 }
 
 {
+    # use Dummy::HashArgs;
+    Dummy::HashArgs->import;
+
     my $param1 = rand;
     my $param2 = rand;
 

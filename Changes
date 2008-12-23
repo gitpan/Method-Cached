@@ -1,5 +1,8 @@
 Revision history for Perl extension Method::Cached
 
+0.045_1 Tue, 23 Dec 2008 23:48:48 +0900
+        - provisional correspondence for mod_perl
+
 0.040   Thu, 27 Nov 2008 14:24:44 +0900
         - change concerning generation rule of key
 

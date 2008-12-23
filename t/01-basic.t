@@ -10,7 +10,7 @@ use Test::More tests => 40;
     use Method::Cached::KeyRule::Serialize;
 
     # Every time, this method invents another value
-    sub echo(@) { join ':', @_, time, rand }
+    sub echo { join ':', @_, time, rand }
 
     sub method0   :Cached                             { echo @_ }
     sub method1   :Cached(0)                          { echo @_ }
@@ -32,6 +32,9 @@ use Test::More tests => 40;
     sub method9   :Cached(undef, 0, SERIALIZE)        { echo @_ }
     sub method9_1 :Cached(undef, 1, SERIALIZE)        { echo @_ }
 }
+
+# use Dummy;
+Dummy->import;
 
 # Test for test
 isnt(
